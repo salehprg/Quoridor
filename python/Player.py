@@ -27,7 +27,7 @@ class Player:
 
         board.get_piece(self.x, self.y).status = self.color
 
-    def put_wall(str, command: str, board: Board):
+    def put_wall(self, command: str, board: Board):
         """
         The wall will be put right/down side 
         of the piece with X and Y position and 
@@ -58,6 +58,38 @@ class Player:
             neighbor_piece1.r_side = "block"
             neighbor_piece2.l_side = "block"
             neighbor_piece3.l_side = "block"
+
+    def remove_wall(command: str, board: Board):
+        """
+        The wall will be removed from right/down side 
+        of the piece with X and Y position and 
+        its neighbor
+
+        the format of command is like:
+            wall#X#Y#ORIENTATION
+        """
+        splitted_command = command.split("#")
+        x = splitted_command[1]
+        y = splitted_command[2]
+        orientation = splitted_command[3]
+
+        piece = board.get_piece(x, y)
+        if orientation == "horizontal":
+            neighbor_piece1 = board.get_piece(x + 1, y)
+            neighbor_piece2 = board.get_piece(x, y + 1)
+            neighbor_piece3 = board.get_piece(x + 1, y + 1)
+            piece.d_side = "free"
+            neighbor_piece1.d_side = "free"
+            neighbor_piece2.u_side = "free"
+            neighbor_piece3.u_side = "free"
+        elif orientation == "vertical":
+            neighbor_piece1 = board.get_piece(x, y + 1)
+            neighbor_piece2 = board.get_piece(x + 1, y)
+            neighbor_piece3 = board.get_piece(x + 1, y + 1)
+            piece.r_side = "free"
+            neighbor_piece1.r_side = "free"
+            neighbor_piece2.l_side = "free"
+            neighbor_piece3.l_side = "free"
 
     def is_winner(self, piece):
         if self.color == "white":
@@ -129,4 +161,13 @@ class Player:
                         legal_moves.append(f"move#{self.x+1}#{self.y-1}")
 
         # PUT WALL
+        for row in board.map:
+            for piece in row:
+                if piece not in board.origin_pieces_walls:
+                    for orientation in ["vertical", "horizontal"]:
+                        command = f"wall#{piece.x}#{piece.y}#{orientation}"
+                        self.put_wall(command, board)
+                        if board.is_reachable(self, opponent):
+                            legal_moves.append(command)
+                        self.remove_wall(command)
 
