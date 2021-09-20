@@ -2,12 +2,9 @@ public class Quoridor {
 
     private String[][] board = new String[9][9];
     private String status = ""; /* in progress, player1_win, player2_win*/
-    private int player1_loc_x;
-    private int player1_loc_y;
-    private int player2_loc_x;
-    private int player2_loc_y;
-    private int player1_wall = 10;
-    private int player2_wall = 10;
+
+    private Player player1 = null;
+    private Player player2 = null;
 
     public Quoridor() {
         for (int i = 0; i <= 8; i++) {
@@ -22,43 +19,26 @@ public class Quoridor {
             }
         }
         this.status= "in progress";
-        this.player1_loc_x = 0;
-        this.player1_loc_y = 3;
-        this.player2_loc_x = 8;
-        this.player2_loc_y = 3;
+        this.player1 = new Player(0,3,"P1");
+        this.player2 = new Player(8,3,"P2");
     }
 
     public String[][] getBoard() {
         return board;
     }
 
-    public int getPlayer1_loc_x() {
-        return player1_loc_x;
+    public void setBoard(String[][] board) {
+        this.board = board;
     }
 
-    public int getPlayer1_loc_y() {
-        return player1_loc_y;
+    public Player getPlayer1() {
+        return player1;
     }
 
-    public int getPlayer2_loc_x() {
-        return player2_loc_x;
+    public Player getPlayer2() {
+        return player2;
     }
 
-    public int getPlayer2_loc_y() {
-        return player2_loc_y;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public int getPlayer1_wall() {
-        return player1_wall;
-    }
-
-    public int getPlayer2_wall() {
-        return player2_wall;
-    }
 
     public void print_board(){
         for (int i = 0; i <= 8; i++) {
