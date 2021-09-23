@@ -9,13 +9,7 @@ public class Quoridor {
     public Quoridor() {
         for (int i = 0; i <= 8; i++) {
             for (int j = 0; j <= 8; j++) {
-                this.board[i][j] = ".";
-                if (i == 3 && j == 0) {
-                    this.board[i][j] = "P1";
-                }
-                else if (i == 3 && j == 8) {
-                    this.board[i][j] = "P2";
-                }
+                this.board[i][j] = "free";
             }
         }
         this.status= "in progress";
@@ -39,19 +33,26 @@ public class Quoridor {
         return player2;
     }
 
-
-    public void print_board(){
+    //◼ block, . free
+    public void print_board(int p1X, int p1Y, int p2X, int p2Y){
         for (int i = 0; i <= 8; i++) {
             for (int j = 0; j <= 8; j++) {
-                if (!board[i][j].equals("P1") && !board[i][j].equals("P2")) {
-                    System.out.print(board[i][j] + "  ");
+                if (j == p1X && i == p1Y) {
+                    System.out.print("P1" + " ");
                 }
-                else {
-                    System.out.print(board[i][j] + " ");
+                else if (j == p2X && i == p2Y){
+                    System.out.print("P2" + " ");
+                }
+                else if (board[i][j].equals("free")) {
+                    System.out.print("." + "  ");
+                }
+                else if(board[i][j].contains("block")){
+                    System.out.print("◼" + "  ");
                 }
                 if (j == 8) {
                     System.out.println();
                 }
+
 
             }
         }

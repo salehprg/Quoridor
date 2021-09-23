@@ -1,3 +1,5 @@
+import java.util.*;
+
 public class Player {
 
     private int player_x;
@@ -33,8 +35,7 @@ public class Player {
 
     public String[][] move(String[][] map, String command){
         String[] split_cmd = command.split("#");
-        map[this.player_y][this.player_x] = ".";
-        map[Integer.parseInt(split_cmd[2])][Integer.parseInt(split_cmd[1])] = this.player_name;
+        map[this.player_y][this.player_x] = "free";
         setPlayer_x(Integer.parseInt(split_cmd[1]));
         setPlayer_y(Integer.parseInt(split_cmd[2]));
         return map;
@@ -46,19 +47,21 @@ public class Player {
         String y = split_cmd[2];
         String orientation = split_cmd[3];
 
-        if (orientation.equals("horizontal")) {
-            map[Integer.parseInt(y)][Integer.parseInt(x)] = "◼";
-            map[Integer.parseInt(y)][Integer.parseInt(x) + 1] = "◼";
+        this.player_wall -=1 ;
 
-            map[Integer.parseInt(y)+ 1][Integer.parseInt(x)] = "◼";
-            map[Integer.parseInt(y) + 1][Integer.parseInt(x) + 1] = "◼";
+        if (orientation.equals("horizontal")) {
+            map[Integer.parseInt(y)][Integer.parseInt(x)] = "block,"+x+"horizontal";
+            map[Integer.parseInt(y)][Integer.parseInt(x) + 1] = "block,"+x+"horizontal"+y;
+
+            map[Integer.parseInt(y)+ 1][Integer.parseInt(x)] = "block,"+x+"horizontal";
+            map[Integer.parseInt(y) + 1][Integer.parseInt(x) + 1] = "block,"+x+"horizontal"+y;
         }
         else if (orientation.equals("vertical")) {
-            map[Integer.parseInt(y)][Integer.parseInt(x)] = "◼";
-            map[Integer.parseInt(y) + 1][Integer.parseInt(x)] = "◼";
+            map[Integer.parseInt(y)][Integer.parseInt(x)] = "block,"+x+"vertical"+y;
+            map[Integer.parseInt(y) + 1][Integer.parseInt(x)] = "block,"+x+"vertical";
 
-            map[Integer.parseInt(y)][Integer.parseInt(x) + 1] = "◼";
-            map[Integer.parseInt(y) + 1][Integer.parseInt(x) + 1] = "◼";
+            map[Integer.parseInt(y)][Integer.parseInt(x) + 1] = "block,"+x+"vertical"+y;
+            map[Integer.parseInt(y) + 1][Integer.parseInt(x) + 1] = "block,"+x+"vertical";
         }
 
         return map;
@@ -68,67 +71,74 @@ public class Player {
         int pX = this.player_x;
         int pY = this.player_y;
         System.out.println(pX + " , " + pY);
-        String[] legal_move = new String[8];
-        int i = 0;
-        if ((pY+1) <= 8) {
-            if ( (map[pX][pY + 1].equals(".")) || (map[pX][pY].equals(".")) && map[pX][pY + 1].equals("◼")){
-                legal_move[i] = "move#"+pX +"#"+(pY+1);
-                i++;
+        Set<String> legal = new HashSet<String>();
+        if ((pX+1) <= 8) {
+            if ((map[pY][pX + 1].equals("free")) || (map[pY][pX].equals("free")) && map[pY][pX + 1].contains("block")){
+                legal.add("move#"+(pX+1) +"#"+pY);
             }
         }
-        if((pY + 2) <= 8){
-            if (!map[pX][pY + 1].equals(".") && !map[pX][pY + 1].equals("◼")) {
-                legal_move[i] = "move#"+pX +"#"+(pY+2);
-                i++;
-            }
-        }
-        if ((pY - 1) >= 0){
-            if ((map[pX][pY - 1].equals(".")) || (map[pX][pY].equals(".")) && map[pX][pY - 1].equals("◼")) {
-                legal_move[i] = "move#"+pX +"#"+(pY-1);
-                i++;
-            }
-        }
-        if ((pY - 2) >= 0){
-            if (!map[pX][pY - 1].equals(".") && !map[pX][pY - 1].equals("◼")) {
-                legal_move[i] = "move#"+pX +"#"+(pY-2);
-                i++;
-            }
-        }
-        if ((pX + 1) <= 8){
-            if ((map[pX + 1][pY].equals(".")) || (map[pX][pY].equals(".")) && map[pX + 1][pY].equals("◼")) {
-                legal_move[i] = "move#"+(pX+1) +"#"+(pY);
-                i++;
-            }
-
-        }
-        if ((pX + 2) <= 8){
-            if (!map[pX + 1][pY].equals(".") && !map[pX + 1][pY].equals("◼")) {
-                legal_move[i] = "move#"+(pX+2) +"#"+(pY);
-                i++;
+        if((pX + 2) <= 8){
+            if (!map[pY][pX + 1].equals("free") && !map[pY][pX + 1].contains("block")) {
+                legal.add("move#"+(pX+2) +"#"+pY);
             }
         }
         if ((pX - 1) >= 0){
-            if ((map[pX - 1][pY].equals(".")) || (map[pX][pY].equals(".")) && map[pX - 1][pY].equals("◼")) {
-                legal_move[i] = "move#"+(pX-1) +"#"+(pY);
-                i++;
+            if ((map[pY][pX - 1].equals("free")) || (map[pY][pX].equals("free")) && map[pY][pX - 1].contains("block")) {
+                legal.add("move#"+(pX-1) +"#"+pY);
+            }
+        }
+        if ((pX - 2) >= 0){
+            if (!map[pY][pX - 1].equals("free") && !map[pY][pX - 1].contains("block")) {
+                legal.add("move#"+(pX-2) +"#"+pY);
+            }
+        }
+        if ((pY + 1) <= 8){
+            if ((map[pY + 1][pX].equals("free")) || (map[pY][pX].equals("free")) && map[pY + 1][pX].contains("block")) {
+                legal.add("move#"+pX +"#"+(pY+1));
+            }
+
+        }
+        if ((pY + 2) <= 8){
+            if (!map[pY + 1][pX].equals("free") && !map[pY + 1][pX].contains("block")) {
+                legal.add("move#"+pX +"#"+(pY+2));
+            }
+        }
+        if ((pY - 1) >= 0){
+            if ((map[pY - 1][pX].equals("free")) || (map[pY][pX].equals("free")) && map[pY - 1][pX].contains("block")) {
+                legal.add("move#"+pX +"#"+(pY-1));
             }
         }
 
-        if ((pX - 2) >= 0) {
-            if (!map[pX - 1][pY].equals(".") && !map[pX - 1][pY].equals("◼")){
-                legal_move[i] = "move#"+(pX-2) +"#"+(pY);
-                i++;
+        if ((pY - 2) >= 0) {
+            if (!map[pY - 1][pX].equals("free") && !map[pY - 1][pX].contains("block")){
+                legal.add("move#"+pX +"#"+(pY-2));
             }
 
         }
 
-        String[] temp = new String[i];
-        for (int j = 0; j < legal_move.length; j++) {
-            if (legal_move[j] != null) {
-                temp[j] = legal_move[j];
-            }
+        if (map[pY][pX].contains("block") && !map[pY][pX+1].equals(map[pY][pX]) && ((pX + 1) <= 8)) {
+            legal.add("move#"+(pX+1) +"#"+(pY));
         }
 
+        if (map[pY][pX].contains("block") && !map[pY][pX-1].equals(map[pY][pX]) && ((pX - 1) >= 0)) {
+            legal.add("move#"+(pX-1) +"#"+(pY));
+        }
+
+        if (map[pY][pX].contains("block") && !map[pY+1][pX].equals(map[pY][pX]) && ((pY + 1) <= 8)) {
+            legal.add("move#"+(pX) +"#"+(pY+1));
+        }
+
+        if (map[pY][pX].contains("block") && !map[pY-1][pX].equals(map[pY][pX]) && ((pX - 1) >= 0)) {
+            legal.add("move#"+(pX) +"#"+(pY-1));
+
+        }
+
+
+        int index = 0;
+        String[] temp = new String[legal.size()];
+        for (String l: legal) {
+            temp[index++] = l;
+        }
         return temp;
     }
 
