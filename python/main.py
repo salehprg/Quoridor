@@ -1,5 +1,5 @@
 from Player import Player
-from utils import Board
+from Board import Board
 from time import sleep
 from random import choice
 
