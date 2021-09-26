@@ -142,4 +142,85 @@ public class Player {
         return temp;
     }
 
+
+    public String[] get_neighbors(String[][] map, int x, int y){
+
+//        int pX = this.player_x;
+        int pX = x;
+//        int pY = this.player_y;
+        int pY = y;
+        Set<String> neighbors = new HashSet<String>();
+
+        if (pX + 1 <= 8 && !map[pY][pX + 1].contains("block")) {
+            neighbors.add((pX + 1) + "," + pY);
+        }
+        if (pY + 1 <= 8 && !map[pY + 1][pX].contains("block")) {
+            neighbors.add(pX + "," + (pY + 1));
+        }
+        if (pX - 1 >= 0 && !map[pY][pX - 1].contains("block")) {
+            neighbors.add((pX - 1) + "," + pY);
+        }
+        if (pY - 1 >= 0 && !map[pY - 1][pX].contains("block")) {
+            neighbors.add(pX + "," + (pY - 1));
+        }
+
+        int index = 0;
+        String[] temp = new String[neighbors.size()];
+        for (String l: neighbors) {
+            temp[index++] = l;
+        }
+        return temp;
+
+    }
+
+
+    public boolean is_win(){
+        if(this.getPlayer_name().equals("P1")){
+            return this.player_x == 8;
+        }
+        else {
+            return this.player_x == 0;
+        }
+
+    }
+
+
+    public boolean is_reachable(String[][] map){
+        int pX = this.player_x;
+        int pY = this.player_y;
+
+        boolean winner = false;
+        LinkedList<String> queue = new LinkedList<String>();
+        Set<String> visited = new HashSet<String>();
+
+        queue.add(pX + "," + pY);
+        visited.add(pX + "," + pY);
+        boolean reachable = false;
+        while (queue.size() != 0){
+            String location = queue.poll();
+            if (this.player_name.equals("P1") && location.split(",")[0].equals("8")) {
+                System.out.println(location);
+                reachable = true;
+                break;
+            }
+            else if (this.player_name.equals("P2") && location.split(",")[0].equals("0")){
+                reachable = true;
+                break;
+            }
+
+//            String[] neighbors = get_neighbors(map, pX, pY);
+            String[] neighbors = get_neighbors(map, Integer.parseInt(location.split(",")[0]), Integer.parseInt(location.split(",")[1]));
+
+            for (int i = 0; i < neighbors.length; i++) {
+                if (!visited.contains(neighbors[i])){
+                    queue.add(neighbors[i]);
+                    visited.add(neighbors[i]);
+                }
+            }
+        }
+        return reachable;
+
+    }
+
+
 }
