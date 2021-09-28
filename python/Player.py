@@ -1,22 +1,25 @@
 class Player:
-    def __init__(self, color, x, y):
+    def __init__(self, color, x, y, board):
         self.color = color
         self.x = x
         self.y = y
         self.walls_count = 10
+        self.board = board
+        self.actions_logs = []
+        self.moves_count = 0
 
     def get_position(self):
         return self.x, self.y
 
-    def move(self, x, y, board):
-        board.get_piece(self.x, self.y).state = "empty"
+    def move(self, x, y):
+        self.board.get_piece(self.x, self.y).state = "empty"
 
         self.x = x
         self.y = y
 
-        board.get_piece(self.x, self.y).state = self.color
+        self.board.get_piece(self.x, self.y).state = self.color
 
-    def put_wall(self, x, y, orientation, board):
+    def put_wall(self, x, y, orientation):
         """
         The wall will be put right/down side 
         of the piece with X and Y position and 
@@ -25,40 +28,55 @@ class Player:
 
         self.walls_count -= 1
 
-        piece = board.get_piece(x, y)
+        piece = self.board.get_piece(x, y)
         if orientation == "horizontal":
-            neighbor_piece1 = board.get_piece(x + 1, y)
-            neighbor_piece2 = board.get_piece(x, y + 1)
-            neighbor_piece3 = board.get_piece(x + 1, y + 1)
+            neighbor_piece1 = self.board.get_piece(x + 1, y)
+            neighbor_piece2 = self.board.get_piece(x, y + 1)
+            neighbor_piece3 = self.board.get_piece(x + 1, y + 1)
             piece.d_side = "block"
             neighbor_piece1.d_side = "block"
             neighbor_piece2.u_side = "block"
             neighbor_piece3.u_side = "block"
-            board.paired_block_pieces.append((piece, neighbor_piece1))
+            self.board.paired_block_pieces.append((piece, neighbor_piece1))
         elif orientation == "vertical":
-            neighbor_piece1 = board.get_piece(x, y + 1)
-            neighbor_piece2 = board.get_piece(x + 1, y)
-            neighbor_piece3 = board.get_piece(x + 1, y + 1)
+            neighbor_piece1 = self.board.get_piece(x, y + 1)
+            neighbor_piece2 = self.board.get_piece(x + 1, y)
+            neighbor_piece3 = self.board.get_piece(x + 1, y + 1)
             piece.r_side = "block"
             neighbor_piece1.r_side = "block"
             neighbor_piece2.l_side = "block"
             neighbor_piece3.l_side = "block"
-            board.paired_block_pieces.append((piece, neighbor_piece1))
+            self.board.paired_block_pieces.append((piece, neighbor_piece1))
 
-    def take_action(self, command, board):
+    def play(self, command, is_evaluating=False):
+        if not is_evaluating:
+            self.moves_count += 1
         splitted_command = command.split("#")
 
         if splitted_command[0] == "move":
             x = int(splitted_command[1])
             y = int(splitted_command[2])
-            self.move(x, y, board)
+            self.actions_logs.append(f"move#{self.x}#{self.y}#{x}#{y}")
+            self.move(x, y)
         else:
             x = int(splitted_command[1])
             y = int(splitted_command[2])
             orientation = splitted_command[3]
-            self.put_wall(x, y, orientation, board)
+            self.actions_logs.append(command)
+            self.put_wall(x, y, orientation)
 
-    def remove_wall(self, command: str, board):
+    def undo_last_action(self):
+        last_action = self.actions_logs.pop()
+        splitted_command = last_action.split("#")
+
+        if splitted_command[0] == "wall":
+            self.remove_wall(last_action)
+        else:
+            x = int(splitted_command[1])
+            y = int(splitted_command[2])
+            self.move(x, y)
+
+    def remove_wall(self, command: str):
         """
         The wall will be removed from right/down side 
         of the piece with X and Y position and 
@@ -75,68 +93,70 @@ class Player:
         y = int(splitted_command[2])
         orientation = splitted_command[3]
 
-        piece = board.get_piece(x, y)
+        piece = self.board.get_piece(x, y)
         if orientation == "horizontal":
-            neighbor_piece1 = board.get_piece(x + 1, y)
-            neighbor_piece2 = board.get_piece(x, y + 1)
-            neighbor_piece3 = board.get_piece(x + 1, y + 1)
+            neighbor_piece1 = self.board.get_piece(x + 1, y)
+            neighbor_piece2 = self.board.get_piece(x, y + 1)
+            neighbor_piece3 = self.board.get_piece(x + 1, y + 1)
             piece.d_side = "free"
             neighbor_piece1.d_side = "free"
             neighbor_piece2.u_side = "free"
             neighbor_piece3.u_side = "free"
-            board.paired_block_pieces.remove((piece, neighbor_piece1))
+            self.board.paired_block_pieces.remove((piece, neighbor_piece1))
         elif orientation == "vertical":
-            neighbor_piece1 = board.get_piece(x, y + 1)
-            neighbor_piece2 = board.get_piece(x + 1, y)
-            neighbor_piece3 = board.get_piece(x + 1, y + 1)
+            neighbor_piece1 = self.board.get_piece(x, y + 1)
+            neighbor_piece2 = self.board.get_piece(x + 1, y)
+            neighbor_piece3 = self.board.get_piece(x + 1, y + 1)
             piece.r_side = "free"
             neighbor_piece1.r_side = "free"
             neighbor_piece2.l_side = "free"
             neighbor_piece3.l_side = "free"
-            board.paired_block_pieces.remove((piece, neighbor_piece1))
+            self.board.paired_block_pieces.remove((piece, neighbor_piece1))
 
-    def is_winner(self, piece):
+    def is_winner(self):
+        player_piece = self.board.get_piece(*self.get_position())
+
         if self.color == "white":
-            if piece.is_white_goal:
+            if player_piece in self.board.get_white_goal_pieces():
                 return True
 
         if self.color == "black":
-            if piece.is_black_goal:
+            if player_piece in self.board.get_black_goal_pieces():
                 return True
 
         return False
 
-    def can_place_wall(self, piece, orientation, board):
+    def can_place_wall(self, piece, orientation):
         if self.walls_count > 0:
             x, y = piece.get_position()
             if not piece.is_border_piece:
                 if orientation == "horizontal":
                     if (
                         piece.d_side == "free"
-                        and board.get_piece(x + 1, y).d_side == "free"
+                        and self.board.get_piece(x + 1, y).d_side == "free"
                     ):
                         if (
                             piece,
-                            board.get_piece(x, y + 1),
-                        ) not in board.paired_block_pieces:
+                            self.board.get_piece(x, y + 1),
+                        ) not in self.board.paired_block_pieces:
                             return True
 
                 if orientation == "vertical":
                     if (
                         piece.r_side == "free"
-                        and board.get_piece(x, y + 1).r_side == "free"
+                        and self.board.get_piece(x, y + 1).r_side == "free"
                     ):
                         if (
                             piece,
-                            board.get_piece(x + 1, y),
-                        ) not in board.paired_block_pieces:
+                            self.board.get_piece(x + 1, y),
+                        ) not in self.board.paired_block_pieces:
                             return True
 
         return False
 
-    def get_legal_moves(self, opponent, board):
-        player_piece = board.get_piece(self.x, self.y)
-        opponent_piece = board.get_piece(opponent.x, opponent.y)
+    def get_legal_actions(self, opponent):
+        player_piece = self.board.get_piece(self.x, self.y)
+        opponent_piece = self.board.get_piece(opponent.x, opponent.y)
 
         legal_moves = []
 
@@ -193,15 +213,14 @@ class Player:
                         legal_moves.append(f"move#{self.x+1}#{self.y-1}")
 
         # PUT WALL
-        for row in board.map:
+        for row in self.board.map:
             for piece in row:
                 for orientation in ["vertical", "horizontal"]:
-                    if self.can_place_wall(piece, orientation, board):
+                    if self.can_place_wall(piece, orientation):
                         command = f"wall#{piece.x}#{piece.y}#{orientation}"
-                        self.put_wall(piece.x, piece.y, orientation, board)
-                        if board.is_reachable(self, opponent):
+                        self.put_wall(piece.x, piece.y, orientation)
+                        if self.board.is_reachable(self, opponent):
                             legal_moves.append(command)
-                        self.remove_wall(command, board)
+                        self.remove_wall(command)
 
         return legal_moves
-
