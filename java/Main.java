@@ -6,7 +6,9 @@ public class Main {
         String[][] board = new String[9][9];
         board = quoridor.getBoard();
         Player player1 = null;
+//        MiniMaxPlayer player1 = null;
         Player player2 = null;
+//        MiniMaxPlayer player2 = null;
 
         player1 = quoridor.getPlayer1();
         player2 = quoridor.getPlayer2();
@@ -43,8 +45,15 @@ public class Main {
         quoridor.print_board(player1.getPlayer_x(), player1.getPlayer_y(), player2.getPlayer_x(), player2.getPlayer_y());
 
         String[] legal_move = player1.get_legal_move(map);
-        for (String m:legal_move) {
-            System.out.println(m);
-        }
+//        for (String m:legal_move) {
+//            System.out.println(m);
+//        }
+
+        MiniMaxPlayer miniMaxPlayer1 = new MiniMaxPlayer(player1.getPlayer_x(), player1.getPlayer_y(), player1.getPlayer_name());
+        MiniMaxPlayer miniMaxPlayer2 = new MiniMaxPlayer(player2.getPlayer_x(), player2.getPlayer_y(), player2.getPlayer_name());
+        System.out.println(miniMaxPlayer1.get_best_action(map, miniMaxPlayer1, miniMaxPlayer2));
+        System.out.println(player1.getPlayer_x() + "," +  player1.getPlayer_y() + "," + player1.getPlayer_name());
+        System.out.println(player2.getPlayer_x() + "," +  player2.getPlayer_y() + "," + player2.getPlayer_name());
+
     }
 }

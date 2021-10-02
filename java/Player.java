@@ -6,11 +6,18 @@ public class Player {
     private int player_y;
     private String player_name;
     private int player_wall = 10;
-
+    private LinkedList<String> action_logs = new LinkedList<String>();
+    int movie_count = 0;
     public Player(int x, int y, String name){
         this.player_x = x;
         this.player_y = y;
         this.player_name = name;
+    }
+
+
+
+    public int getPlayer_wall() {
+        return player_wall;
     }
 
     public int getPlayer_x() {
@@ -64,6 +71,32 @@ public class Player {
             map[Integer.parseInt(y) + 1][Integer.parseInt(x) + 1] = "block,"+x+"vertical";
         }
 
+        return map;
+    }
+
+
+    public String[][] remove_wall(String[][] map, String command){
+        String[] split_cmd = command.split("#");
+        String x = split_cmd[1];
+        String y = split_cmd[2];
+        String orientation = split_cmd[3];
+
+        this.player_wall +=1 ;
+
+        if (orientation.equals("horizontal")) {
+            map[Integer.parseInt(y)][Integer.parseInt(x)] = "free";
+            map[Integer.parseInt(y)][Integer.parseInt(x) + 1] = "free";
+
+            map[Integer.parseInt(y)+ 1][Integer.parseInt(x)] = "free";
+            map[Integer.parseInt(y) + 1][Integer.parseInt(x) + 1] = "free";
+        }
+        else if (orientation.equals("vertical")) {
+            map[Integer.parseInt(y)][Integer.parseInt(x)] = "free";
+            map[Integer.parseInt(y) + 1][Integer.parseInt(x)] = "free";
+
+            map[Integer.parseInt(y)][Integer.parseInt(x) + 1] = "free";
+            map[Integer.parseInt(y) + 1][Integer.parseInt(x) + 1] = "free";
+        }
         return map;
     }
 
@@ -133,6 +166,24 @@ public class Player {
 
         }
 
+        Set<String> how = new HashSet<String>();
+        how.add("vertical");
+        how.add("horizontal");
+        for (int j = 0; j < 8; j++) {
+            for (int i = 0; i < 8; i++) {
+                for (String s : how) {
+                    String command = "wall#" + i + "#" + j + "#" + s;
+//                    System.out.println(command);
+                    map = put_wall(map, command);
+                    if (is_reachable(map)) {
+                        legal.add(command);
+//                        System.out.println("reach");
+                    }
+                    map = remove_wall(map, command);
+                }
+            }
+        }
+
 
         int index = 0;
         String[] temp = new String[legal.size()];
@@ -174,7 +225,7 @@ public class Player {
     }
 
 
-    public boolean is_win(){
+    public boolean is_winner(){
         if(this.getPlayer_name().equals("P1")){
             return this.player_x == 8;
         }
@@ -199,7 +250,7 @@ public class Player {
         while (queue.size() != 0){
             String location = queue.poll();
             if (this.player_name.equals("P1") && location.split(",")[0].equals("8")) {
-                System.out.println(location);
+//                System.out.println(location);
                 reachable = true;
                 break;
             }
@@ -221,6 +272,47 @@ public class Player {
         return reachable;
 
     }
+
+
+    public String[][] play(String[][] map, String command, boolean is_evaluating){
+        if (is_evaluating) {
+            movie_count += 1;
+        }
+        String[] split_cmd = command.split("#");
+
+        if (split_cmd[0].equals("move")) {
+            action_logs.add("move#" + this.getPlayer_x() + "#" + this.getPlayer_y() + "#" + Integer.parseInt(split_cmd[1]) + "#" + Integer.parseInt(split_cmd[2]));
+            return move(map, command);
+        }
+        else {
+            action_logs.add(command);
+            return put_wall(map, command);
+        }
+    }
+
+    public int bfs(String[][] map, Player self_player, Player opponent_player) {
+        return 0;
+    }
+    public String get_best_action(String[][] map, Player self_player, Player opponent_player){
+        return null;
+    }
+
+
+    public String[][] undo_last_action(String[][] map){
+        String temp = action_logs.poll();
+        String[] split_cmd = temp.split("#");
+
+        if (split_cmd[0].equals("wall")) {
+            return remove_wall(map, temp);
+        }
+        else {
+            int x = Integer.parseInt(split_cmd[1]);
+            int y = Integer.parseInt(split_cmd[1]);
+            return move(map, "move#" + x + "#" + y);
+        }
+    }
+
+
 
 
 }

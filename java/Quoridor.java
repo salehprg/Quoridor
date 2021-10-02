@@ -5,6 +5,8 @@ public class Quoridor {
 
     private Player player1 = null;
     private Player player2 = null;
+//    private MiniMaxPlayer player1 = null;
+//    private MiniMaxPlayer player2 = null;
 
     public Quoridor() {
         for (int i = 0; i <= 8; i++) {
@@ -14,6 +16,8 @@ public class Quoridor {
         }
         this.status= "in progress";
         this.player1 = new Player(0,3,"P1");
+//        this.player1 = new MiniMaxPlayer(0,3,"P1");
+//        this.player1 = new MiniMaxPlayer(8,3,"P2");
         this.player2 = new Player(8,3,"P2");
     }
 
@@ -26,6 +30,7 @@ public class Quoridor {
     }
 
     public Player getPlayer1() {
+//        return player1;
         return player1;
     }
 
