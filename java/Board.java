@@ -1,24 +1,12 @@
-public class Quoridor {
-
+public class Board {
     private String[][] board = new String[9][9];
-    private String status = ""; /* in progress, player1_win, player2_win*/
 
-    private Player player1 = null;
-    private Player player2 = null;
-//    private MiniMaxPlayer player1 = null;
-//    private MiniMaxPlayer player2 = null;
-
-    public Quoridor() {
+    public Board() {
         for (int i = 0; i <= 8; i++) {
             for (int j = 0; j <= 8; j++) {
                 this.board[i][j] = "free";
             }
         }
-        this.status= "in progress";
-        this.player1 = new Player(0,3,"P1");
-//        this.player1 = new MiniMaxPlayer(0,3,"P1");
-//        this.player1 = new MiniMaxPlayer(8,3,"P2");
-        this.player2 = new Player(8,3,"P2");
     }
 
     public String[][] getBoard() {
@@ -29,17 +17,21 @@ public class Quoridor {
         this.board = board;
     }
 
-    public Player getPlayer1() {
-//        return player1;
-        return player1;
+    public void setPiece(int x, int y , String state){
+        this.board[y][x] = state;
     }
 
-    public Player getPlayer2() {
-        return player2;
+    public String getPiece(int x, int y){
+        return this.board[y][x];
     }
 
     //◼ block, . free
-    public void print_board(int p1X, int p1Y, int p2X, int p2Y){
+
+    public void print_board(Player player1, Player player2){
+        int p1X = player1.getPlayer_x();
+        int p1Y = player1.getPlayer_y();
+        int p2X = player2.getPlayer_x();
+        int p2Y = player2.getPlayer_y();
         for (int i = 0; i <= 8; i++) {
             for (int j = 0; j <= 8; j++) {
                 if (j == p1X && i == p1Y) {

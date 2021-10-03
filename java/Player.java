@@ -1,4 +1,10 @@
-import java.util.*;
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.Set;
+import java.util.HashMap;
+
 
 public class Player {
 
@@ -6,15 +12,15 @@ public class Player {
     private int player_y;
     private String player_name;
     private int player_wall = 10;
-    private LinkedList<String> action_logs = new LinkedList<String>();
+    private Queue<String> action_logs = new LinkedList<String>();
     int movie_count = 0;
-    public Player(int x, int y, String name){
+    protected Board board = null;
+    public Player(int x, int y, String name, Board board){
         this.player_x = x;
         this.player_y = y;
         this.player_name = name;
+        this.board = board;
     }
-
-
 
     public int getPlayer_wall() {
         return player_wall;
@@ -40,15 +46,15 @@ public class Player {
         this.player_y = player_y;
     }
 
-    public String[][] move(String[][] map, String command){
+    public void move(String command){
         String[] split_cmd = command.split("#");
-        map[this.player_y][this.player_x] = "free";
-        setPlayer_x(Integer.parseInt(split_cmd[1]));
-        setPlayer_y(Integer.parseInt(split_cmd[2]));
-        return map;
+        this.board.setPiece(this.player_x, this.player_y, "free");
+        this.setPlayer_x(Integer.parseInt(split_cmd[1]));
+        this.setPlayer_y(Integer.parseInt(split_cmd[2]));
     }
 
-    public String[][] put_wall(String[][] map, String command){
+
+    public void put_wall(String command){
         String[] split_cmd = command.split("#");
         String x = split_cmd[1];
         String y = split_cmd[2];
@@ -57,25 +63,23 @@ public class Player {
         this.player_wall -=1 ;
 
         if (orientation.equals("horizontal")) {
-            map[Integer.parseInt(y)][Integer.parseInt(x)] = "block,"+x+"horizontal";
-            map[Integer.parseInt(y)][Integer.parseInt(x) + 1] = "block,"+x+"horizontal"+y;
+            this.board.setPiece(Integer.parseInt(x), Integer.parseInt(y), "block,"+x+",horizontal");
+            this.board.setPiece(Integer.parseInt(x) + 1, Integer.parseInt(y), "block,"+x+",horizontal,"+y);
 
-            map[Integer.parseInt(y)+ 1][Integer.parseInt(x)] = "block,"+x+"horizontal";
-            map[Integer.parseInt(y) + 1][Integer.parseInt(x) + 1] = "block,"+x+"horizontal"+y;
+            this.board.setPiece(Integer.parseInt(x), Integer.parseInt(y) + 1, "block,"+x+",horizontal");
+            this.board.setPiece(Integer.parseInt(x) + 1, Integer.parseInt(y) + 1, "block,"+x+",horizontal,"+y);
         }
         else if (orientation.equals("vertical")) {
-            map[Integer.parseInt(y)][Integer.parseInt(x)] = "block,"+x+"vertical"+y;
-            map[Integer.parseInt(y) + 1][Integer.parseInt(x)] = "block,"+x+"vertical";
+            this.board.setPiece(Integer.parseInt(x), Integer.parseInt(y), "block,"+x+",vertical,"+y);
+            this.board.setPiece(Integer.parseInt(x), Integer.parseInt(y) + 1, "block,"+x+"vertical");
 
-            map[Integer.parseInt(y)][Integer.parseInt(x) + 1] = "block,"+x+"vertical"+y;
-            map[Integer.parseInt(y) + 1][Integer.parseInt(x) + 1] = "block,"+x+"vertical";
+            this.board.setPiece(Integer.parseInt(x) + 1, Integer.parseInt(y), "block,"+x+",vertical,"+y);
+            this.board.setPiece(Integer.parseInt(x) + 1, Integer.parseInt(y) + 1, "block,"+x+",vertical");
         }
-
-        return map;
     }
 
 
-    public String[][] remove_wall(String[][] map, String command){
+    public void remove_wall(String command){
         String[] split_cmd = command.split("#");
         String x = split_cmd[1];
         String y = split_cmd[2];
@@ -84,86 +88,87 @@ public class Player {
         this.player_wall +=1 ;
 
         if (orientation.equals("horizontal")) {
-            map[Integer.parseInt(y)][Integer.parseInt(x)] = "free";
-            map[Integer.parseInt(y)][Integer.parseInt(x) + 1] = "free";
+            this.board.setPiece(Integer.parseInt(x), Integer.parseInt(y), "free");
+            this.board.setPiece(Integer.parseInt(x) + 1, Integer.parseInt(y), "free");
 
-            map[Integer.parseInt(y)+ 1][Integer.parseInt(x)] = "free";
-            map[Integer.parseInt(y) + 1][Integer.parseInt(x) + 1] = "free";
+            this.board.setPiece(Integer.parseInt(x), Integer.parseInt(y) + 1, "free");
+            this.board.setPiece(Integer.parseInt(x) + 1, Integer.parseInt(y) + 1, "free");
         }
         else if (orientation.equals("vertical")) {
-            map[Integer.parseInt(y)][Integer.parseInt(x)] = "free";
-            map[Integer.parseInt(y) + 1][Integer.parseInt(x)] = "free";
+            this.board.setPiece(Integer.parseInt(x), Integer.parseInt(y), "free");
+            this.board.setPiece(Integer.parseInt(x), Integer.parseInt(y) + 1, "free");
 
-            map[Integer.parseInt(y)][Integer.parseInt(x) + 1] = "free";
-            map[Integer.parseInt(y) + 1][Integer.parseInt(x) + 1] = "free";
+            this.board.setPiece(Integer.parseInt(x) + 1, Integer.parseInt(y), "free");
+            this.board.setPiece(Integer.parseInt(x) + 1, Integer.parseInt(y) + 1, "free");
         }
-        return map;
+
     }
 
-    public String[] get_legal_move(String[][] map){
+
+
+    public String[] get_legal_move(){
         int pX = this.player_x;
         int pY = this.player_y;
-        System.out.println(pX + " , " + pY);
+
         Set<String> legal = new HashSet<String>();
         if ((pX+1) <= 8) {
-            if ((map[pY][pX + 1].equals("free")) || (map[pY][pX].equals("free")) && map[pY][pX + 1].contains("block")){
+            if ((this.board.getPiece((pY),(pX + 1)).equals("free")) || (this.board.getPiece(pY, pX).equals("free")) && this.board.getPiece((pY), (pX + 1)).contains("block")){
                 legal.add("move#"+(pX+1) +"#"+pY);
             }
         }
         if((pX + 2) <= 8){
-            if (!map[pY][pX + 1].equals("free") && !map[pY][pX + 1].contains("block")) {
+            if (!this.board.getPiece((pY),(pX + 1)).equals("free") && !this.board.getPiece((pY),(pX + 1)).contains("block")) {
                 legal.add("move#"+(pX+2) +"#"+pY);
             }
         }
         if ((pX - 1) >= 0){
-            if ((map[pY][pX - 1].equals("free")) || (map[pY][pX].equals("free")) && map[pY][pX - 1].contains("block")) {
+            if ((this.board.getPiece((pY), (pX - 1)).equals("free")) || (this.board.getPiece(pY, pX).equals("free")) && this.board.getPiece((pY), (pX - 1)).contains("block")) {
                 legal.add("move#"+(pX-1) +"#"+pY);
             }
         }
         if ((pX - 2) >= 0){
-            if (!map[pY][pX - 1].equals("free") && !map[pY][pX - 1].contains("block")) {
+            if (!this.board.getPiece((pY), (pX - 1)).equals("free") && !this.board.getPiece((pY), (pX - 1)).contains("block")) {
                 legal.add("move#"+(pX-2) +"#"+pY);
             }
         }
         if ((pY + 1) <= 8){
-            if ((map[pY + 1][pX].equals("free")) || (map[pY][pX].equals("free")) && map[pY + 1][pX].contains("block")) {
+            if ((this.board.getPiece((pY + 1), (pX)).equals("free")) || (this.board.getPiece(pY, pX).equals("free")) && this.board.getPiece((pY + 1), (pX)).contains("block")) {
                 legal.add("move#"+pX +"#"+(pY+1));
             }
 
         }
         if ((pY + 2) <= 8){
-            if (!map[pY + 1][pX].equals("free") && !map[pY + 1][pX].contains("block")) {
+            if (!this.board.getPiece((pY + 1), (pX)).equals("free") && !this.board.getPiece((pY + 1), (pX)).contains("block")) {
                 legal.add("move#"+pX +"#"+(pY+2));
             }
         }
         if ((pY - 1) >= 0){
-            if ((map[pY - 1][pX].equals("free")) || (map[pY][pX].equals("free")) && map[pY - 1][pX].contains("block")) {
+            if ((this.board.getPiece((pY - 1), (pX)).equals("free")) || (this.board.getPiece((pY), (pX)).equals("free")) && this.board.getPiece((pY - 1), (pX)).contains("block")) {
                 legal.add("move#"+pX +"#"+(pY-1));
             }
         }
 
         if ((pY - 2) >= 0) {
-            if (!map[pY - 1][pX].equals("free") && !map[pY - 1][pX].contains("block")){
+            if (!this.board.getPiece((pY - 1), (pX)).equals("free") && !this.board.getPiece((pY - 1), (pX)).contains("block")){
                 legal.add("move#"+pX +"#"+(pY-2));
             }
 
         }
 
-        if (map[pY][pX].contains("block") && !map[pY][pX+1].equals(map[pY][pX]) && ((pX + 1) <= 8)) {
+        if (this.board.getPiece((pY), (pX)).contains("block") && !this.board.getPiece((pY), (pX + 1)).equals(this.board.getPiece((pY), (pX))) && ((pX + 1) <= 8)) {
             legal.add("move#"+(pX+1) +"#"+(pY));
         }
 
-        if (map[pY][pX].contains("block") && !map[pY][pX-1].equals(map[pY][pX]) && ((pX - 1) >= 0)) {
+        if (this.board.getPiece((pY), (pX)).contains("block") && !this.board.getPiece((pY), (pX - 1)).equals(this.board.getPiece((pY), (pX))) && ((pX - 1) >= 0)) {
             legal.add("move#"+(pX-1) +"#"+(pY));
         }
 
-        if (map[pY][pX].contains("block") && !map[pY+1][pX].equals(map[pY][pX]) && ((pY + 1) <= 8)) {
+        if (this.board.getPiece((pY), (pX)).contains("block") && !this.board.getPiece((pY + 1), (pX)).equals(this.board.getPiece((pY), (pX))) && ((pY + 1) <= 8)) {
             legal.add("move#"+(pX) +"#"+(pY+1));
         }
 
-        if (map[pY][pX].contains("block") && !map[pY-1][pX].equals(map[pY][pX]) && ((pX - 1) >= 0)) {
+        if (this.board.getPiece((pY), (pX)).contains("block") && !this.board.getPiece((pY - 1), (pX)).equals(this.board.getPiece((pY), (pX))) && ((pX - 1) >= 0)) {
             legal.add("move#"+(pX) +"#"+(pY-1));
-
         }
 
         Set<String> how = new HashSet<String>();
@@ -173,13 +178,13 @@ public class Player {
             for (int i = 0; i < 8; i++) {
                 for (String s : how) {
                     String command = "wall#" + i + "#" + j + "#" + s;
-//                    System.out.println(command);
-                    map = put_wall(map, command);
-                    if (is_reachable(map)) {
-                        legal.add(command);
-//                        System.out.println("reach");
+                    if (!this.board.getPiece((j), (i)).contains("block")) {
+                        put_wall(command);
+                        if (is_reachable()) {
+                            legal.add(command);
+                        }
+                        remove_wall(command);
                     }
-                    map = remove_wall(map, command);
                 }
             }
         }
@@ -194,24 +199,24 @@ public class Player {
     }
 
 
-    public String[] get_neighbors(String[][] map, int x, int y){
+    public String[] get_neighbors(int x, int y){
 
-//        int pX = this.player_x;
+
         int pX = x;
-//        int pY = this.player_y;
+
         int pY = y;
         Set<String> neighbors = new HashSet<String>();
 
-        if (pX + 1 <= 8 && !map[pY][pX + 1].contains("block")) {
+        if (pX + 1 <= 8 && !this.board.getPiece((pY), (pX + 1)).contains("block")) {
             neighbors.add((pX + 1) + "," + pY);
         }
-        if (pY + 1 <= 8 && !map[pY + 1][pX].contains("block")) {
+        if (pY + 1 <= 8 && !this.board.getPiece((pY + 1), (pX)).contains("block")) {
             neighbors.add(pX + "," + (pY + 1));
         }
-        if (pX - 1 >= 0 && !map[pY][pX - 1].contains("block")) {
+        if (pX - 1 >= 0 && !this.board.getPiece((pY), (pX - 1)).contains("block")) {
             neighbors.add((pX - 1) + "," + pY);
         }
-        if (pY - 1 >= 0 && !map[pY - 1][pX].contains("block")) {
+        if (pY - 1 >= 0 && !this.board.getPiece((pY - 1), (pX)).contains("block")) {
             neighbors.add(pX + "," + (pY - 1));
         }
 
@@ -224,7 +229,6 @@ public class Player {
 
     }
 
-
     public boolean is_winner(){
         if(this.getPlayer_name().equals("P1")){
             return this.player_x == 8;
@@ -235,12 +239,10 @@ public class Player {
 
     }
 
-
-    public boolean is_reachable(String[][] map){
+    public boolean is_reachable(){
         int pX = this.player_x;
         int pY = this.player_y;
 
-        boolean winner = false;
         LinkedList<String> queue = new LinkedList<String>();
         Set<String> visited = new HashSet<String>();
 
@@ -250,7 +252,7 @@ public class Player {
         while (queue.size() != 0){
             String location = queue.poll();
             if (this.player_name.equals("P1") && location.split(",")[0].equals("8")) {
-//                System.out.println(location);
+
                 reachable = true;
                 break;
             }
@@ -259,8 +261,8 @@ public class Player {
                 break;
             }
 
-//            String[] neighbors = get_neighbors(map, pX, pY);
-            String[] neighbors = get_neighbors(map, Integer.parseInt(location.split(",")[0]), Integer.parseInt(location.split(",")[1]));
+
+            String[] neighbors = get_neighbors(Integer.parseInt(location.split(",")[0]), Integer.parseInt(location.split(",")[1]));
 
             for (int i = 0; i < neighbors.length; i++) {
                 if (!visited.contains(neighbors[i])){
@@ -274,7 +276,8 @@ public class Player {
     }
 
 
-    public String[][] play(String[][] map, String command, boolean is_evaluating){
+    public void play(String command, boolean is_evaluating){
+
         if (is_evaluating) {
             movie_count += 1;
         }
@@ -282,33 +285,40 @@ public class Player {
 
         if (split_cmd[0].equals("move")) {
             action_logs.add("move#" + this.getPlayer_x() + "#" + this.getPlayer_y() + "#" + Integer.parseInt(split_cmd[1]) + "#" + Integer.parseInt(split_cmd[2]));
-            return move(map, command);
+            move(command);
         }
         else {
             action_logs.add(command);
-            return put_wall(map, command);
+            put_wall(command);
         }
     }
 
-    public int bfs(String[][] map, Player self_player, Player opponent_player) {
+
+    public int bfs(Player self_player, Player opponent_player) {
         return 0;
     }
-    public String get_best_action(String[][] map, Player self_player, Player opponent_player){
+    public String get_best_action(Player self_player, Player opponent_player){
         return null;
     }
 
 
-    public String[][] undo_last_action(String[][] map){
-        String temp = action_logs.poll();
-        String[] split_cmd = temp.split("#");
-
-        if (split_cmd[0].equals("wall")) {
-            return remove_wall(map, temp);
+    public void undo_last_action(){
+        String temp = ((LinkedList<String>) action_logs).removeLast();
+        if (temp == null) {
+            return;
         }
         else {
-            int x = Integer.parseInt(split_cmd[1]);
-            int y = Integer.parseInt(split_cmd[1]);
-            return move(map, "move#" + x + "#" + y);
+            String[] split_cmd = temp.split("#");
+            if (split_cmd[0].equals("wall")) {
+
+               remove_wall(temp);
+            }
+            else {
+                int x = Integer.parseInt(split_cmd[1]);
+                int y = Integer.parseInt(split_cmd[2]);
+
+                move("move#" + x + "#" + y);
+            }
         }
     }
 
