@@ -1,111 +1,113 @@
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Set;
+import java.util.*;
 
 public class MiniMaxPlayer extends Player{
 
-    private int MAX_DEPTH = 2;
-    private int INFINITY = 9999;
+    private double MAX_DEPTH = 2.0;
+    private double INFINITY = 9999.0;
 
-    public MiniMaxPlayer(int x, int y, String name, Board board) {
-        super(x, y, name, board);
+    public MiniMaxPlayer(String color, int x, int y, Board board) {
+        super(color, x, y, board);
     }
 
 
-    @Override
-    public int bfs(Player self_player, Player opponent_player){
-        int self_distance = 0;
-        int opponent_distance = 0;
-        Set<Player> players = new HashSet<Player>();
-        players.add(self_player);
-        players.add(opponent_player);
+    public String bfs(MiniMaxPlayer opponent){
+        double self_distance = 0.0;
+        double opponent_distance = 0.0;
+        Set<MiniMaxPlayer> players = new HashSet<MiniMaxPlayer>();
+        players.add(this);
+        players.add(opponent);
 
-        for (Player player : players) {
-            LinkedList<String> queue = new LinkedList<String>();
-            HashMap<String, Boolean> visited = new HashMap<>();
-            HashMap<String, Integer> distances = new HashMap<>();
+        Set<Piece> destination = new HashSet<Piece>();
+        for (MiniMaxPlayer player : players) {
+            if (player.color.equals("white")) destination = this.board.get_white_goal_pieces();
+            else destination = this.board.get_black_goal_pieces();
 
-            for (int j = 0; j <= 8; j++) {
-                for (int i = 0; i <= 8; i++) {
+            Queue<Piece> queue = new LinkedList<Piece>();
+            HashMap<Piece, Boolean> visited = new HashMap<Piece, Boolean>();
+            HashMap<Piece, Double> distances = new HashMap<Piece, Double>();
 
-                    visited.put(i + "," + j, false);
-
-                    distances.put(i + "," + j, INFINITY);
+            for (int y = 0; y < this.board.ROWS_NUM; y++) {
+                for (int x = 0; x < this.board.COLS_NUM; x++) {
+                    visited.put(this.board.boardMap[y][x], false);
+                    distances.put(this.board.boardMap[y][x], this.INFINITY);
                 }
             }
-            int pX = player.getPlayer_x();
-            int pY = player.getPlayer_y();
 
-            visited.put(pX + "," + pY, true);
+            String player_pos = player.get_position();
+            int x = Integer.parseInt(player_pos.split(",")[0]);
+            int y = Integer.parseInt(player_pos.split(",")[1]);
+            Piece player_piece = this.board.get_piece(x , y);
 
-            distances.put(pX + "," + pY, 0);
+            queue.add(player_piece);
+            visited.put(player_piece, true);
+            distances.put(player_piece, 0.0);
 
-            queue.add(pX + "," + pY);
             while (queue.size() != 0){
-                String piece = queue.poll();
-                String[] neighbors = player.get_neighbors(Integer.parseInt(piece.split(",")[0]), Integer.parseInt(piece.split(",")[1]));
+                Piece piece = ((LinkedList<Piece>) queue).removeFirst();
 
-                for (int i = 0; i < neighbors.length; i++) {
-                    if (!visited.containsKey(neighbors[i])) {
-                        distances.put(neighbors[i], distances.get(piece) + 1);
-                        visited.put(neighbors[i], true);
-                        queue.add(neighbors[i]);
+                Set<Piece> piece_temp = new HashSet<Piece>();
+
+                piece_temp = this.board.get_piece_neighbors(piece);
+                for (Piece p : piece_temp) {
+                    if (!visited.get(p)){
+                        double t = distances.get(piece) + 1;
+                        distances.put(p, t);
+                        visited.put(p, true);
+                        queue.add(p);
                     }
                 }
 
-                int min_distance = INFINITY;
+                double min_distance = this.INFINITY;
 
-                for (String location : distances.keySet()) {
-                    if (player.getPlayer_name().equals("P1") && location.split(",")[0].equals("8")) {
-                        if (distances.get(location) < min_distance) {
-                            min_distance = distances.get(location);
+                for (Piece p_key : distances.keySet()) {
+                    if (destination.contains(p_key)){
+                        if (distances.get(p_key) < min_distance){
+                            min_distance = distances.get(p_key);
                         }
                     }
-                    else if (player.getPlayer_name().equals("P2") && location.split(",")[0].equals("0")) {
-                        if (distances.get(location) < min_distance) {
-                            min_distance = distances.get(location);
-                        }
-                    }
                 }
 
-                if (player == self_player) {
-                    self_distance = min_distance;
-                }
+                if (player == this) self_distance = min_distance;
                 else opponent_distance = min_distance;
             }
         }
 
-        return (5 * opponent_distance - self_distance) * ( 1 + this.getPlayer_wall() / 2);
-
-
+        return self_distance + "," + opponent_distance;
     }
 
+    public double evaluate(MiniMaxPlayer opponent){
+        String distances = this.bfs(opponent);
+        double self_distance = Double.parseDouble(distances.split(",")[0]);
+        double opponent_distance  = Double.parseDouble(distances.split(",")[1]);
 
+        double total_score = (5 * opponent_distance - self_distance) * (
+                1 + this.walls_count / 2.0
+                );
 
-    @Override
-    public String get_best_action(Player self_player, Player opponent_player){
-        int best_action_value = - (INFINITY);
+        return total_score;
+    }
+
+    public String get_best_action(MiniMaxPlayer opponent){
+        double best_action_value = - (this.INFINITY);
         String best_action = "";
-        String[] legal_move = this.get_legal_move();
-        for (int i = 0; i < legal_move.length; i++) {
-            this.play(legal_move[i], true);
-            if (this.is_winner()) {
+        Set<String> legal_move = new HashSet<String>();
+        legal_move = this.get_legal_actions(opponent);
+        for (String action : legal_move) {
+            this.play(action, true);
+            if (this.is_winner()){
                 this.undo_last_action();
-
-                return legal_move[i];
+                return action;
             }
-            int actrion_value = bfs(self_player, opponent_player);
-            if (actrion_value > best_action_value) {
-                best_action_value = actrion_value;
-                best_action = legal_move[i];
 
+            double action_value = this.evaluate(opponent);
+            if (action_value > best_action_value){
+                best_action_value = action_value;
+                best_action = action;
             }
+
             this.undo_last_action();
         }
 
         return best_action;
     }
-
-
 }

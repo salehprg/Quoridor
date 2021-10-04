@@ -1,5 +1,4 @@
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class Main {
@@ -7,29 +6,50 @@ public class Main {
     public static void main(String[] args) throws InterruptedException{
         Board board = new Board();
 
-        MiniMaxPlayer player1 = new MiniMaxPlayer(0, 3, "P1", board);
-        MiniMaxPlayer player2 = new MiniMaxPlayer(8, 3, "P2", board);
-
-        String action = player1.get_best_action(player1, player2);
-        player1.play(action, false);
-        board.print_board(player1, player2);
-        System.out.println("----");
-        TimeUnit.SECONDS.sleep(3);
 
 
+        MiniMaxPlayer white_player = new MiniMaxPlayer("white", 4, 8, board);
+        MiniMaxPlayer black_player = new MiniMaxPlayer("black", 4, 0, board);
+        Set<String> move = new HashSet<String >();
 
-        action = player2.get_best_action(player2, player1);
-        player2.play(action, false);
-        board.print_board(player1, player2);
-        System.out.println("----");
-        TimeUnit.SECONDS.sleep(3);
+        int walls_count = 0;
 
-        action = player1.get_best_action(player1, player2);
-        player1.play(action, false);
-        board.print_board(player1, player2);
-        System.out.println("----");
-        TimeUnit.SECONDS.sleep(3);
+        while (true){
+            String action = white_player.get_best_action(black_player);
+
+            white_player.play(action, false);
+            board.print_map();
+            System.out.println(
+                    "white: " + action + ", evaluation: " + white_player.evaluate(black_player) +
+                            ", left walls: " + white_player.walls_count
+            );
 
 
+            if (white_player.is_winner()){
+                System.out.println("White player just won with " + white_player.moves_count + " moves!");
+                break;
+            }
+            if (action.split("#")[0].equals("wall")) walls_count += 1;
+
+            TimeUnit.SECONDS.sleep(3);
+
+            action = black_player.get_best_action(white_player);
+
+            black_player.play(action, false);
+            board.print_map();
+            System.out.println(
+                    "black: " + action + ", evaluation: " + black_player.evaluate(white_player) +
+                            ", left walls: " + black_player.walls_count
+            );
+
+            if (black_player.is_winner()){
+                System.out.println("Black player just won with " + black_player.moves_count + " moves!");
+                break;
+            }
+
+            if (action.split("#")[0].equals("wall")) walls_count += 1;
+
+            TimeUnit.SECONDS.sleep(3);
+        }
     }
 }

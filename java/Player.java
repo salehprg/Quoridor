@@ -1,328 +1,295 @@
-import java.util.LinkedList;
-import java.util.Queue;
+import java.time.Period;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.Queue;
 import java.util.Set;
-import java.util.HashMap;
-
 
 public class Player {
+    int x;
+    int y;
+    String color;
+    int walls_count;
+    Board board;
+    int moves_count;
+    private Queue<String> actions_logs = null ;
 
-    private int player_x;
-    private int player_y;
-    private String player_name;
-    private int player_wall = 10;
-    private Queue<String> action_logs = new LinkedList<String>();
-    int movie_count = 0;
-    protected Board board = null;
-    public Player(int x, int y, String name, Board board){
-        this.player_x = x;
-        this.player_y = y;
-        this.player_name = name;
+    public Player(String  color, int x, int y, Board board) {
+        this.color = color;
+        this.x = x;
+        this.y = y;
+        this.walls_count = 10;
         this.board = board;
+        this.actions_logs = new LinkedList<String>();
+        this.moves_count = 0;
     }
 
-    public int getPlayer_wall() {
-        return player_wall;
+    public String get_position(){
+        return this.x + "," + this.y;
     }
 
-    public int getPlayer_x() {
-        return player_x;
+    public void move(int x , int y){
+        this.board.get_piece(this.x, this.y).state = "empty";
+
+        this.x = x;
+        this.y = y;
+
+        this.board.get_piece(this.x, this.y).state = this.color;
     }
 
-    public int getPlayer_y() {
-        return player_y;
-    }
+    public void put_wall(int x, int y, String orientation){
+//        System.out.println("put_wall");
+//        System.out.println(orientation);
 
-    public String getPlayer_name() {
-        return player_name;
-    }
+        this.walls_count -= 1;
 
-    public void setPlayer_x(int player_x) {
-        this.player_x = player_x;
-    }
-
-    public void setPlayer_y(int player_y) {
-        this.player_y = player_y;
-    }
-
-    public void move(String command){
-        String[] split_cmd = command.split("#");
-        this.board.setPiece(this.player_x, this.player_y, "free");
-        this.setPlayer_x(Integer.parseInt(split_cmd[1]));
-        this.setPlayer_y(Integer.parseInt(split_cmd[2]));
-    }
-
-
-    public void put_wall(String command){
-        String[] split_cmd = command.split("#");
-        String x = split_cmd[1];
-        String y = split_cmd[2];
-        String orientation = split_cmd[3];
-
-        this.player_wall -=1 ;
-
-        if (orientation.equals("horizontal")) {
-            this.board.setPiece(Integer.parseInt(x), Integer.parseInt(y), "block,"+x+",horizontal");
-            this.board.setPiece(Integer.parseInt(x) + 1, Integer.parseInt(y), "block,"+x+",horizontal,"+y);
-
-            this.board.setPiece(Integer.parseInt(x), Integer.parseInt(y) + 1, "block,"+x+",horizontal");
-            this.board.setPiece(Integer.parseInt(x) + 1, Integer.parseInt(y) + 1, "block,"+x+",horizontal,"+y);
+        Piece piece = this.board.get_piece(x, y);
+        if (orientation.equals("horizontal")){
+            Piece neighbor_piece1 = this.board.get_piece((x + 1), y);
+            Piece neighbor_piece2 = this.board.get_piece(x, (y + 1));
+            Piece neighbor_piece3 = this.board.get_piece((x + 1), (y + 1));
+            piece.d_side = "block";
+            neighbor_piece1.d_side = "block";
+            neighbor_piece2.u_side = "block";
+            neighbor_piece3.u_side = "block";
+            this.board.paired_block_pieces.put(piece, neighbor_piece1);
         }
-        else if (orientation.equals("vertical")) {
-            this.board.setPiece(Integer.parseInt(x), Integer.parseInt(y), "block,"+x+",vertical,"+y);
-            this.board.setPiece(Integer.parseInt(x), Integer.parseInt(y) + 1, "block,"+x+"vertical");
-
-            this.board.setPiece(Integer.parseInt(x) + 1, Integer.parseInt(y), "block,"+x+",vertical,"+y);
-            this.board.setPiece(Integer.parseInt(x) + 1, Integer.parseInt(y) + 1, "block,"+x+",vertical");
+        else if (orientation.equals("vertical")){
+            Piece neighbor_piece1 = this.board.get_piece(x, (y + 1));
+            Piece neighbor_piece2 = this.board.get_piece((x + 1), y);
+            Piece neighbor_piece3 = this.board.get_piece((x + 1), (y + 1));
+//            System.out.println("0");
+//            System.out.println(piece);
+//            System.out.println(neighbor_piece1);
+//            System.out.println(neighbor_piece2);
+//            System.out.println(neighbor_piece3);
+            piece.r_side = "block";
+            neighbor_piece1.r_side = "block";
+            neighbor_piece2.l_side = "block";
+            neighbor_piece3.l_side = "block";
+            this.board.paired_block_pieces.put(piece, neighbor_piece1);
         }
     }
 
+    public void play(String command, boolean is_evaluating){
+//        System.out.println(command);
+        if (!is_evaluating){
+            this.moves_count += 1;
+        }
+        String[] split_cmd = command.split("#");
+
+        if (split_cmd[0].equals("move")){
+            int x = Integer.parseInt(split_cmd[1]);
+            int y = Integer.parseInt(split_cmd[2]);
+            this.actions_logs.add("move#" + this.x + "#" + this.y + "#" + x + "#" + y);
+            this.move(x, y);
+        }
+        else {
+            int x = Integer.parseInt(split_cmd[1]);
+            int y = Integer.parseInt(split_cmd[2]);
+            String orientation = split_cmd[3];
+            this.actions_logs.add(command);
+            this.put_wall(x, y, orientation);
+        }
+    }
+
+    public void undo_last_action(){
+        String last_action  = ((LinkedList<String>) actions_logs).removeLast();
+        String[] splitted_command = last_action.split("#");
+
+        if (splitted_command[0].equals("wall")){ this.remove_wall(last_action); }
+        else {
+            int x = Integer.parseInt(splitted_command[1]);
+            int y = Integer.parseInt(splitted_command[2]);
+            this.move(x, y);
+        }
+    }
 
     public void remove_wall(String command){
-        String[] split_cmd = command.split("#");
-        String x = split_cmd[1];
-        String y = split_cmd[2];
-        String orientation = split_cmd[3];
 
-        this.player_wall +=1 ;
+        this.walls_count += 1;
 
-        if (orientation.equals("horizontal")) {
-            this.board.setPiece(Integer.parseInt(x), Integer.parseInt(y), "free");
-            this.board.setPiece(Integer.parseInt(x) + 1, Integer.parseInt(y), "free");
+        String [] splitted_command = command.split("#");
+        int x = Integer.parseInt(splitted_command[1]);
+        int y = Integer.parseInt(splitted_command[2]);
+        String orientation = splitted_command[3];
 
-            this.board.setPiece(Integer.parseInt(x), Integer.parseInt(y) + 1, "free");
-            this.board.setPiece(Integer.parseInt(x) + 1, Integer.parseInt(y) + 1, "free");
+        Piece piece = this.board.get_piece(x, y);
+        if (orientation.equals("horizontal")){
+            Piece neighbor_piece1 = this.board.get_piece((x + 1), y);
+            Piece neighbor_piece2 = this.board.get_piece(x, (y + 1));
+            Piece neighbor_piece3 = this.board.get_piece((x + 1), (y + 1));
+            piece.d_side = "free";
+            neighbor_piece1.d_side = "free";
+            neighbor_piece2.u_side = "free";
+            neighbor_piece3.u_side = "free";
+            this.board.paired_block_pieces.remove(piece, neighbor_piece1);
         }
-        else if (orientation.equals("vertical")) {
-            this.board.setPiece(Integer.parseInt(x), Integer.parseInt(y), "free");
-            this.board.setPiece(Integer.parseInt(x), Integer.parseInt(y) + 1, "free");
-
-            this.board.setPiece(Integer.parseInt(x) + 1, Integer.parseInt(y), "free");
-            this.board.setPiece(Integer.parseInt(x) + 1, Integer.parseInt(y) + 1, "free");
+        else if (orientation.equals("vertical")){
+            Piece neighbor_piece1 = this.board.get_piece(x, (y + 1));
+            Piece neighbor_piece2 = this.board.get_piece((x + 1), y);
+            Piece neighbor_piece3 = this.board.get_piece((x + 1), (y + 1));
+            piece.r_side = "free";
+            neighbor_piece1.r_side = "free";
+            neighbor_piece2.l_side = "free";
+            neighbor_piece3.l_side = "free";
+            this.board.paired_block_pieces.remove(piece, neighbor_piece1);
         }
-
     }
 
+    public boolean is_winner(){
+        String player_pos = this.get_position();
+        int x = Integer.parseInt(player_pos.split(",")[0]);
+        int y = Integer.parseInt(player_pos.split(",")[1]);
+        Piece player_piece = this.board.get_piece(x, y);
 
-
-    public String[] get_legal_move(){
-        int pX = this.player_x;
-        int pY = this.player_y;
-
-        Set<String> legal = new HashSet<String>();
-        if ((pX+1) <= 8) {
-            if ((this.board.getPiece((pY),(pX + 1)).equals("free")) || (this.board.getPiece(pY, pX).equals("free")) && this.board.getPiece((pY), (pX + 1)).contains("block")){
-                legal.add("move#"+(pX+1) +"#"+pY);
-            }
-        }
-        if((pX + 2) <= 8){
-            if (!this.board.getPiece((pY),(pX + 1)).equals("free") && !this.board.getPiece((pY),(pX + 1)).contains("block")) {
-                legal.add("move#"+(pX+2) +"#"+pY);
-            }
-        }
-        if ((pX - 1) >= 0){
-            if ((this.board.getPiece((pY), (pX - 1)).equals("free")) || (this.board.getPiece(pY, pX).equals("free")) && this.board.getPiece((pY), (pX - 1)).contains("block")) {
-                legal.add("move#"+(pX-1) +"#"+pY);
-            }
-        }
-        if ((pX - 2) >= 0){
-            if (!this.board.getPiece((pY), (pX - 1)).equals("free") && !this.board.getPiece((pY), (pX - 1)).contains("block")) {
-                legal.add("move#"+(pX-2) +"#"+pY);
-            }
-        }
-        if ((pY + 1) <= 8){
-            if ((this.board.getPiece((pY + 1), (pX)).equals("free")) || (this.board.getPiece(pY, pX).equals("free")) && this.board.getPiece((pY + 1), (pX)).contains("block")) {
-                legal.add("move#"+pX +"#"+(pY+1));
-            }
-
-        }
-        if ((pY + 2) <= 8){
-            if (!this.board.getPiece((pY + 1), (pX)).equals("free") && !this.board.getPiece((pY + 1), (pX)).contains("block")) {
-                legal.add("move#"+pX +"#"+(pY+2));
-            }
-        }
-        if ((pY - 1) >= 0){
-            if ((this.board.getPiece((pY - 1), (pX)).equals("free")) || (this.board.getPiece((pY), (pX)).equals("free")) && this.board.getPiece((pY - 1), (pX)).contains("block")) {
-                legal.add("move#"+pX +"#"+(pY-1));
+        if (this.color.equals("whit")){
+            if (this.board.get_white_goal_pieces().contains(player_piece)){
+                return true;
             }
         }
 
-        if ((pY - 2) >= 0) {
-            if (!this.board.getPiece((pY - 1), (pX)).equals("free") && !this.board.getPiece((pY - 1), (pX)).contains("block")){
-                legal.add("move#"+pX +"#"+(pY-2));
+        if (this.color.equals("black")){
+            if (this.board.get_black_goal_pieces().contains(player_piece)){
+                return true;
             }
-
         }
 
-        if (this.board.getPiece((pY), (pX)).contains("block") && !this.board.getPiece((pY), (pX + 1)).equals(this.board.getPiece((pY), (pX))) && ((pX + 1) <= 8)) {
-            legal.add("move#"+(pX+1) +"#"+(pY));
-        }
+        return false;
+    }
 
-        if (this.board.getPiece((pY), (pX)).contains("block") && !this.board.getPiece((pY), (pX - 1)).equals(this.board.getPiece((pY), (pX))) && ((pX - 1) >= 0)) {
-            legal.add("move#"+(pX-1) +"#"+(pY));
-        }
-
-        if (this.board.getPiece((pY), (pX)).contains("block") && !this.board.getPiece((pY + 1), (pX)).equals(this.board.getPiece((pY), (pX))) && ((pY + 1) <= 8)) {
-            legal.add("move#"+(pX) +"#"+(pY+1));
-        }
-
-        if (this.board.getPiece((pY), (pX)).contains("block") && !this.board.getPiece((pY - 1), (pX)).equals(this.board.getPiece((pY), (pX))) && ((pX - 1) >= 0)) {
-            legal.add("move#"+(pX) +"#"+(pY-1));
-        }
-
-        Set<String> how = new HashSet<String>();
-        how.add("vertical");
-        how.add("horizontal");
-        for (int j = 0; j < 8; j++) {
-            for (int i = 0; i < 8; i++) {
-                for (String s : how) {
-                    String command = "wall#" + i + "#" + j + "#" + s;
-                    if (!this.board.getPiece((j), (i)).contains("block")) {
-                        put_wall(command);
-                        if (is_reachable()) {
-                            legal.add(command);
+    public boolean can_place_wall(Piece piece, String orientation){
+        if (this.walls_count > 0){
+            String pos = piece.get_position();
+            int x = Integer.parseInt(pos.split(",")[0]);
+            int y = Integer.parseInt(pos.split(",")[1]);
+            if (!piece.is_border_piece){
+                if (orientation.equals("horizontal")){
+                    if (piece.d_side.equals("free") &&
+                            this.board.get_piece((x + 1), y).d_side.equals("free")){
+                        if (!this.board.paired_block_pieces.containsKey(piece) &&
+                            !this.board.paired_block_pieces.containsValue(this.board.get_piece(x, (y + 1)))){
+                                return true;
                         }
-                        remove_wall(command);
+                    }
+                }
+                if (orientation.equals("vertical")){
+                    if (piece.r_side.equals("free") &&
+                            this.board.get_piece(x, (y + 1)).r_side.equals("free")){
+                        if (!this.board.paired_block_pieces.containsKey(piece) &&
+                                !this.board.paired_block_pieces.containsValue(this.board.get_piece((x + 1), y))){
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public Set<String> get_legal_actions(Player opponent){
+        Piece player_piece = this.board.get_piece(this.x, this.y);
+        Piece opponent_piece = this.board.get_piece(opponent.x, opponent.y);
+
+        Set<String> legal_moves = new HashSet<String>();
+
+        if (!player_piece.r_side.equals("block")){
+            if (!opponent_piece.get_position().equals((this.x + 1) + "," + this.y)){
+                legal_moves.add("move#" + (this.x + 1) + "#" + this.y);
+            }
+            else {
+                if (opponent_piece.r_side.equals("free")){
+                    legal_moves.add("move#" + (this.x + 2) + "#" + this.y);
+                }
+                else {
+                    if (opponent_piece.u_side.equals("free")){
+                        legal_moves.add("move#" + (this.x + 1) + "#" + (this.y - 1));
+                    }
+                    if (opponent_piece.d_side.equals("free")){
+                        legal_moves.add("move#" + (this.x + 1) + "#" + (this.y + 1));
                     }
                 }
             }
         }
 
 
-        int index = 0;
-        String[] temp = new String[legal.size()];
-        for (String l: legal) {
-            temp[index++] = l;
-        }
-        return temp;
-    }
-
-
-    public String[] get_neighbors(int x, int y){
-
-
-        int pX = x;
-
-        int pY = y;
-        Set<String> neighbors = new HashSet<String>();
-
-        if (pX + 1 <= 8 && !this.board.getPiece((pY), (pX + 1)).contains("block")) {
-            neighbors.add((pX + 1) + "," + pY);
-        }
-        if (pY + 1 <= 8 && !this.board.getPiece((pY + 1), (pX)).contains("block")) {
-            neighbors.add(pX + "," + (pY + 1));
-        }
-        if (pX - 1 >= 0 && !this.board.getPiece((pY), (pX - 1)).contains("block")) {
-            neighbors.add((pX - 1) + "," + pY);
-        }
-        if (pY - 1 >= 0 && !this.board.getPiece((pY - 1), (pX)).contains("block")) {
-            neighbors.add(pX + "," + (pY - 1));
-        }
-
-        int index = 0;
-        String[] temp = new String[neighbors.size()];
-        for (String l: neighbors) {
-            temp[index++] = l;
-        }
-        return temp;
-
-    }
-
-    public boolean is_winner(){
-        if(this.getPlayer_name().equals("P1")){
-            return this.player_x == 8;
-        }
-        else {
-            return this.player_x == 0;
-        }
-
-    }
-
-    public boolean is_reachable(){
-        int pX = this.player_x;
-        int pY = this.player_y;
-
-        LinkedList<String> queue = new LinkedList<String>();
-        Set<String> visited = new HashSet<String>();
-
-        queue.add(pX + "," + pY);
-        visited.add(pX + "," + pY);
-        boolean reachable = false;
-        while (queue.size() != 0){
-            String location = queue.poll();
-            if (this.player_name.equals("P1") && location.split(",")[0].equals("8")) {
-
-                reachable = true;
-                break;
+        if (!player_piece.d_side.equals("block")){
+            if (!opponent_piece.get_position().equals((this.x) + "," + (this.y + 1))){
+                legal_moves.add("move#" + (this.x) + "#" + (this.y + 1));
             }
-            else if (this.player_name.equals("P2") && location.split(",")[0].equals("0")){
-                reachable = true;
-                break;
-            }
-
-
-            String[] neighbors = get_neighbors(Integer.parseInt(location.split(",")[0]), Integer.parseInt(location.split(",")[1]));
-
-            for (int i = 0; i < neighbors.length; i++) {
-                if (!visited.contains(neighbors[i])){
-                    queue.add(neighbors[i]);
-                    visited.add(neighbors[i]);
+            else {
+                if (opponent_piece.d_side.equals("free")){
+                    legal_moves.add("move#" + (this.x) + "#" + (this.y + 2));
+                }
+                else {
+                    if (opponent_piece.r_side.equals("free")){
+                        legal_moves.add("move#" + (this.x + 1) + "#" + (this.y + 1));
+                    }
+                    if (opponent_piece.l_side.equals("free")){
+                        legal_moves.add("move#" + (this.x - 1) + "#" + (this.y + 1));
+                    }
                 }
             }
         }
-        return reachable;
-
-    }
 
 
-    public void play(String command, boolean is_evaluating){
-
-        if (is_evaluating) {
-            movie_count += 1;
-        }
-        String[] split_cmd = command.split("#");
-
-        if (split_cmd[0].equals("move")) {
-            action_logs.add("move#" + this.getPlayer_x() + "#" + this.getPlayer_y() + "#" + Integer.parseInt(split_cmd[1]) + "#" + Integer.parseInt(split_cmd[2]));
-            move(command);
-        }
-        else {
-            action_logs.add(command);
-            put_wall(command);
-        }
-    }
-
-
-    public int bfs(Player self_player, Player opponent_player) {
-        return 0;
-    }
-    public String get_best_action(Player self_player, Player opponent_player){
-        return null;
-    }
-
-
-    public void undo_last_action(){
-        String temp = ((LinkedList<String>) action_logs).removeLast();
-        if (temp == null) {
-            return;
-        }
-        else {
-            String[] split_cmd = temp.split("#");
-            if (split_cmd[0].equals("wall")) {
-
-               remove_wall(temp);
+        if (!player_piece.l_side.equals("block")){
+            if (!opponent_piece.get_position().equals((this.x - 1) + "," + (this.y))){
+                legal_moves.add("move#" + (this.x - 1) + "#" + this.y);
             }
             else {
-                int x = Integer.parseInt(split_cmd[1]);
-                int y = Integer.parseInt(split_cmd[2]);
-
-                move("move#" + x + "#" + y);
+                if (opponent_piece.l_side.equals("free")){
+                    legal_moves.add("move#" + (this.x - 2) + "#" + (this.y));
+                }
+                else {
+                    if (opponent_piece.u_side.equals("free")){
+                        legal_moves.add("move#" + (this.x - 1) + "#" + (this.y - 1));
+                    }
+                    if (opponent_piece.d_side.equals("free")){
+                        legal_moves.add("move#" + (this.x - 1) + "#" + (this.y + 1));
+                    }
+                }
             }
         }
+
+
+        if (!player_piece.u_side.equals("block")){
+            if (!opponent_piece.get_position().equals((this.x) + "," + (this.y - 1))){
+                legal_moves.add("move#" + (this.x) + "#" + (this.y - 1));
+            }
+            else {
+                if (opponent_piece.u_side.equals("free")){
+                    legal_moves.add("move#" + (this.x) + "#" + (this.y - 2));
+                }
+                else {
+                    if (opponent_piece.l_side.equals("free")){
+                        legal_moves.add("move#" + (this.x - 1) + "#" + (this.y - 1));
+                    }
+                    if (opponent_piece.r_side.equals("free")){
+                        legal_moves.add("move#" + (this.x + 1) + "#" + (this.y - 1));
+                    }
+                }
+            }
+        }
+
+        Set<String> orientation = new HashSet<String>();
+        orientation.add("vertical");
+        orientation.add("horizontal");
+        for (int y = 0; y < this.board.ROWS_NUM; y++) {
+            for (int x = 0; x < this.board.COLS_NUM; x++) {
+                for (String or : orientation) {
+                    if (this.can_place_wall(this.board.boardMap[y][x], or)){
+                        String command = "wall#" + this.board.boardMap[y][x].x + "#" + this.board.boardMap[y][x].y + "#" + or;
+                        this.put_wall(this.board.boardMap[y][x].x, this.board.boardMap[y][x].y, or);
+                        if (this.board.is_reachable(opponent) && this.board.is_reachable(this)){
+                            legal_moves.add(command);
+                        }
+                        this.remove_wall(command);
+                    }
+                }
+            }
+        }
+        return legal_moves;
     }
-
-
-
 
 }
