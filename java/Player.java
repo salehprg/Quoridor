@@ -37,8 +37,7 @@ public class Player {
     }
 
     public void put_wall(int x, int y, String orientation){
-//        System.out.println("put_wall");
-//        System.out.println(orientation);
+
 
         this.walls_count -= 1;
 
@@ -57,11 +56,6 @@ public class Player {
             Piece neighbor_piece1 = this.board.get_piece(x, (y + 1));
             Piece neighbor_piece2 = this.board.get_piece((x + 1), y);
             Piece neighbor_piece3 = this.board.get_piece((x + 1), (y + 1));
-//            System.out.println("0");
-//            System.out.println(piece);
-//            System.out.println(neighbor_piece1);
-//            System.out.println(neighbor_piece2);
-//            System.out.println(neighbor_piece3);
             piece.r_side = "block";
             neighbor_piece1.r_side = "block";
             neighbor_piece2.l_side = "block";
@@ -71,7 +65,6 @@ public class Player {
     }
 
     public void play(String command, boolean is_evaluating){
-//        System.out.println(command);
         if (!is_evaluating){
             this.moves_count += 1;
         }

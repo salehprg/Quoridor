@@ -48,19 +48,6 @@ public class Board {
                     right_side = "block";
                 }
 
-//                row.add(new Piece(
-//                        x,
-//                        y,
-//                        state,
-//                        right_side,
-//                        up_side,
-//                        left_side,
-//                        down_side,
-//                        is_white_goal,
-//                        is_black_goal,
-//                        is_border_piece
-//                ));
-
                 boardMap[y][x] = new Piece(
                         x,
                         y,
@@ -74,7 +61,6 @@ public class Board {
                         is_border_piece
                 );
             }
-//            map.add(row);
 
         }
     }
@@ -111,66 +97,15 @@ public class Board {
         int x = Integer.parseInt(temp.split(",")[0]);
         int y = Integer.parseInt(temp.split(",")[1]);
 
-        if (x + 1 < COLS_NUM && piece.r_side != "block") neighbors.add(this.get_piece((x + 1), y));
-        if (y + 1 < ROWS_NUM && piece.d_side != "block") neighbors.add(this.get_piece(x, (y + 1)));
-        if (x - 1 >= 0 && piece.l_side != "block") neighbors.add(this.get_piece((x - 1), y));
-        if (y - 1 >= 0 && piece.u_side != "block") neighbors.add(this.get_piece(x, (y - 1)));
+        if (x + 1 < COLS_NUM && !piece.r_side.equals("block")) neighbors.add(this.get_piece((x + 1), y));
+        if (y + 1 < ROWS_NUM && !piece.d_side.equals("block")) neighbors.add(this.get_piece(x, (y + 1)));
+        if (x - 1 >= 0 && !piece.l_side.equals("block")) neighbors.add(this.get_piece((x - 1), y));
+        if (y - 1 >= 0 && !piece.u_side.equals("block")) neighbors.add(this.get_piece(x, (y - 1)));
 
         return neighbors;
 
     }
 
-    /*public boolean is_reachable(Player white_player, Player black_player){
-        Set<Player> players = new HashSet<Player>();
-        Set<Piece> destination = new HashSet<Piece>();
-        for (Player player : players) {
-
-            Queue<Piece> queue = new LinkedList<Piece>();
-            HashMap<Piece, Boolean> visited = new HashMap<Piece, Boolean>();
-
-            if (player.color.equals("white")) destination = this.get_white_goal_pieces();
-            else destination = this.get_black_goal_pieces();
-
-            for (int y = 0; y < ROWS_NUM; y++) {
-                for (int x = 0; x < COLS_NUM; x++) {
-                    visited.put(this.boardMap[y][x], false);
-                }
-            }
-
-            String player_pos = player.get_position();
-            int x = Integer.parseInt(player_pos.split(",")[0]);
-            int y = Integer.parseInt(player_pos.split(",")[1]);
-
-            Piece player_piece = this.get_piece(x, y);
-
-            queue.add(player_piece);
-            visited.put(player_piece, true);
-            boolean can_be_reached = false;
-
-            while (queue.size() != 0){
-                Piece piece = ((LinkedList<Piece>) queue).removeFirst();
-
-                if (destination.contains(piece)){
-                    can_be_reached = true;
-                    break;
-                }
-
-                Set<Piece> temp = new HashSet<Piece>();
-                temp = this.get_piece_neighbors(piece);
-
-                for (Piece p : temp) {
-                    if (!visited.get(p)){
-                        queue.add(p);
-                        visited.put(p, true);
-                    }
-                }
-            }
-            if (!can_be_reached){
-                return false;
-            }
-        }
-        return true;
-    }*/
 
     public boolean is_reachable(Player player){
         Set<Player> players = new HashSet<Player>();
@@ -217,10 +152,6 @@ public class Board {
             }
         }
         return can_be_reached;
-//        if (!can_be_reached){
-//            return false;
-//        }
-//    return true;
     }
 
     public void print_map(){
