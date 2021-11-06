@@ -170,7 +170,7 @@ public class Board {
                 Piece piece = this.get_piece(x, y);
 
                 if (piece.state.equals("empty")) System.out.print(SQUARE + " ");
-                else if (piece.state.equals("white")) System.out.print(WHITE_PLAYER + HALFSPACE);
+                else if (piece.state.equals("white")) System.out.print(WHITE_PLAYER+ " ");
                 else System.out.print(BLACK_PLAYER + HALFSPACE);
 
                 if (piece.r_side.equals("block")) System.out.print(VERTICAL_WALL + " ");
@@ -187,7 +187,7 @@ public class Board {
                         if (this.get_piece((x + 1), y).d_side.equals("block")){
                             System.out.print(HORIZONTAL_WALL + HORIZONTAL_WALL);
                         }
-                        else System.out.print(HORIZONTAL_WALL + THREEPEREMSPACE + " ");
+                        else System.out.print(HORIZONTAL_WALL + " ");
                     }
                     else System.out.print(" " + " ");
                     if (piece.r_side.equals("block") &&
