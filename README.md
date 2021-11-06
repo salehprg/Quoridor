@@ -67,7 +67,7 @@ The objective is to be the first player to move their pawn to any piece on the o
 	`git clone https://github.com/behzadshomali/Quoridor.git`
 	
 2. Go to the cloned directory and then *python* sub-directory:
-3. 
+
 	`cd Quoridor/java/`
 	
 3. compile the file:
