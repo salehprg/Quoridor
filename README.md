@@ -48,15 +48,7 @@ The objective is to be the first player to move their pawn to any piece on the o
 
 	`cd Quoridor/python/`
     
-3. Create a virtual environment and then activate it:
-	
-    `python3 -m venv quoridor ; source quoridor/bin/activate`
-    
-4. Install the dependencies:
-	
-	`pip3 install -r  requirements.txt`
-    
-5. Run the program:
+3. Run the program:
 
 	`python3 main.py`
 	
