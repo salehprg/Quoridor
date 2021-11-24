@@ -135,7 +135,7 @@ public class Player {
         int y = Integer.parseInt(player_pos.split(",")[1]);
         Piece player_piece = this.board.get_piece(x, y);
 
-        if (this.color.equals("whit")){
+        if (this.color.equals("white")){
             if (this.board.get_white_goal_pieces().contains(player_piece)){
                 return true;
             }
