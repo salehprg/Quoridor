@@ -7,6 +7,7 @@ class Player:
         self.board = board
         self.actions_logs = []
         self.moves_count = 0
+  
 
     def get_position(self):
         return self.x, self.y
@@ -38,6 +39,7 @@ class Player:
             neighbor_piece2.u_side = "block"
             neighbor_piece3.u_side = "block"
             self.board.paired_block_pieces.append((piece, neighbor_piece1))
+
         elif orientation == "vertical":
             neighbor_piece1 = self.board.get_piece(x, y + 1)
             neighbor_piece2 = self.board.get_piece(x + 1, y)
@@ -49,8 +51,10 @@ class Player:
             self.board.paired_block_pieces.append((piece, neighbor_piece1))
 
     def play(self, command, is_evaluating=False):
+
         if not is_evaluating:
             self.moves_count += 1
+
         splitted_command = command.split("#")
 
         if splitted_command[0] == "move":
@@ -89,11 +93,13 @@ class Player:
         self.walls_count += 1
 
         splitted_command = command.split("#")
+        
         x = int(splitted_command[1])
         y = int(splitted_command[2])
         orientation = splitted_command[3]
 
         piece = self.board.get_piece(x, y)
+
         if orientation == "horizontal":
             neighbor_piece1 = self.board.get_piece(x + 1, y)
             neighbor_piece2 = self.board.get_piece(x, y + 1)
@@ -103,6 +109,7 @@ class Player:
             neighbor_piece2.u_side = "free"
             neighbor_piece3.u_side = "free"
             self.board.paired_block_pieces.remove((piece, neighbor_piece1))
+
         elif orientation == "vertical":
             neighbor_piece1 = self.board.get_piece(x, y + 1)
             neighbor_piece2 = self.board.get_piece(x + 1, y)

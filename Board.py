@@ -24,13 +24,13 @@ class Board:
                 if y == 0:
                     is_white_goal = True
                     up_side = "block"
-                    if x == 4:
+                    if x == self.ROWS_NUM / 2:
                         state = "black"
                 elif y == self.ROWS_NUM - 1:
                     is_border_piece = True
                     is_black_goal = True
                     down_side = "block"
-                    if x == 4:
+                    if x == self.ROWS_NUM / 2:
                         state = "white"
                 if x == 0:
                     left_side = "block"
@@ -121,7 +121,10 @@ class Board:
         BLACK_PLAYER = "\u2659"
         SQUARE = "\u00B7"
 
-        os.system("cls" if os.name == "nt" else "clear")
+        #os.system("cls" if os.name == "nt" else "clear")
+
+        print("---------------------------------------- \n")
+
 
         for y in range(self.ROWS_NUM):
             for x in range(self.COLS_NUM):
@@ -132,6 +135,7 @@ class Board:
 
                 if piece.state == "empty":
                     print(SQUARE, end=" ")
+                    
                 elif piece.state == "white":
                     print(WHITE_PLAYER, end=" ")
                 else:
